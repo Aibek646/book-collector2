@@ -1,5 +1,7 @@
-from django.shortcuts import render
-from .models import Book
+from django.shortcuts import render, redirect
+from .models import Book, Translator
+from .forms import NewPrint
+
 # Create your views here.def
 
 def home(request):
@@ -15,4 +17,15 @@ def books_index(request):
 
 def books_detail(request, book_id):
     book = Book.objects.get(id=book_id)
-    return render(request, 'books/book_detail.html', {'book': book})    
+    trans_book_no_have = Translator.objects.exclude(id__in = book.translators.all().values_list('id'))
+    print_form = NewPrint()
+    return render(request, 'books/book_detail.html', {'book': book, 'print_form': print_form, 'trans': trans_book_no_have})    
+
+
+def add_print(request, book_id):
+    form = NewPrint(request.POST)
+    if form.is_valid():
+        new_print = form.save(commit=False)
+        new_print.book_id = book_id
+        new_print.save()
+    return redirect('detail', book_id=book_id)        
